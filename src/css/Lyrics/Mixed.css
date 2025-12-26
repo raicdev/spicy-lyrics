@@ -328,7 +328,7 @@
   .line.bg-line
   .letterGroup
   .letter {
-  font-family: SpicyLyrics;
+  font-family: SpicyLyrics, "Noto Sans JP", "Noto Sans Georgian", "VazirmatnRegular", sans-serif;
 }
 
 /* @keyframes MusicalLineScaleLoop {
@@ -596,7 +596,7 @@ body.SpicySidebarLyrics__Active
     z-index 0.1s !important;
   position: relative;
   transform-origin: center center !important;
-  font-family: SpicyLyrics !important;
+  font-family: SpicyLyrics, "Noto Sans JP", "Noto Sans Georgian", "VazirmatnRegular", sans-serif !important;
   z-index: -1;
   line-height: 0 !important;
   margin: 0 !important;
@@ -606,7 +606,7 @@ body.SpicySidebarLyrics__Active
 #SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line.musical-line .dotGroup {
   transition: scale 0.25s !important;
   scale: 0;
-  font-family: SpicyLyrics !important;
+  font-family: SpicyLyrics, "Noto Sans JP", "Noto Sans Georgian", "VazirmatnRegular", sans-serif !important;
   transform-origin: center center;
 }
 

@@ -1,7 +1,7 @@
 import React from "react";
+import ReactDOM from "react-dom/client";
 import { isDev } from "../../components/Global/Defaults.ts";
 import Session from "../../components/Global/Session.ts";
-import ReactDOM from "react-dom/client";
 import { PopupModal } from "../../components/Modal.ts";
 
 let ShownUpdateNotice = false;
@@ -27,9 +27,7 @@ export async function CheckForUpdates(force: boolean = false) {
           {latestVersion?.Text || "Unknown"}
         </div>
         <button
-          onClick={() =>
-            window._spicy_lyrics_session.Navigate({ pathname: "/SpicyLyrics/Update" })
-          }
+          onClick={() => window._spicy_lyrics_session.Navigate({ pathname: "/SpicyLyrics/Update" })}
           className="btn-release"
           data-encore-id="buttonSecondary"
         >
@@ -38,13 +36,13 @@ export async function CheckForUpdates(force: boolean = false) {
       </div>
     );
 
-    PopupModal.display({
-      title: "New Update - Spicy Lyrics",
-      content: div,
-      onClose: () => {
-        reactRoot.unmount();
-      }
-    });
+    // PopupModal.display({
+    //   title: "New Update - Spicy Lyrics",
+    //   content: div,
+    //   onClose: () => {
+    //     reactRoot.unmount();
+    //   }
+    // });
     ShownUpdateNotice = true;
   }
 }

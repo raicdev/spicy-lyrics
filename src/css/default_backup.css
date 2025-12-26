@@ -21,7 +21,7 @@
 }
 
 #SpicyLyricsPage.UseSpicyFont {
-  font-family: SpicyLyrics; /*  , var(--fallback-fonts,sans-serif); */
+  font-family: SpicyLyrics, "Noto Sans JP", sans-serif; /*  , var(--fallback-fonts,sans-serif); */
 }
 
 [font="Vazirmatn"] {
@@ -664,7 +664,7 @@ UNUSED:
 #SpicyLyricsPage .lyricsParent .lyrics .line.bg-line .letterGroup .letter {
   --font-size: calc(var(--DefaultLyricsSize) * 0.75);
   font-size: var(--font-size);
-  font-family: SpicyLyrics;
+  font-family: SpicyLyrics, "Noto Sans JP", sans-serif;
   font-weight: 500;
 }
 
