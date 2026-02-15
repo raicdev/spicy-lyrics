@@ -70,6 +70,8 @@ export interface SyllableLead {
   BGWord?: boolean;
   Dot?: boolean;
   AnimatorStore?: SyllableAnimatorStore;
+  Status?: "NotSung" | "Active" | "Sung";
+  StateChangedAt?: number;
   SLMAnimated?: boolean;
   PreSLMAnimated?: boolean;
 }
@@ -224,7 +226,6 @@ const LyricsInterval = () => {
 
   if (Defaults.LyricsContainerExists) {
     const progress = SpotifyPlayer.GetPosition();
-    Lyrics.TimeSetter(progress);
     Lyrics.Animate(progress);
   }
   OnPreRender(LyricsInterval);

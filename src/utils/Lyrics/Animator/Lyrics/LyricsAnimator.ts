@@ -327,6 +327,9 @@ const createLineSprings = () => {
 export let Blurring_LastLine: number | null = null;
 //const SKIP_ANIMATING_ACTIVE_WORD_DURATION = 235;
 let lastFrameTime = performance.now();
+const DEFAULT_FRAME_INTERVAL = 1000 / 60;
+const SIDEBAR_FRAME_INTERVAL = 1000 / 50;
+const WORD_SETTLE_MS = 160;
 
 export function findActiveElement(currentTime: number): any {
   const ProcessedPosition = currentTime + timeOffset;
@@ -446,22 +449,15 @@ export function Animate(position: number): void {
   }
 
   const now = performance.now();
-
-  const LIMIT_FRAMES = (isSpicySidebarMode ? (Defaults.SimpleLyricsMode ? false : true) : false);
-  const FRAME_INTERVAL = 1000 / 50;
-
-  //const isLetterElementActive = (findActiveElement(position)?.[1] === "letter" || findActiveElement(position)?.[1] === "letterGroup");
-  //const shouldLimitFrame = ((LIMIT_FRAMES && !isLetterElementActive) && now - lastAnimateFrameTime < FRAME_INTERVAL);
-
-  const shouldLimitFrame = LIMIT_FRAMES && now - lastAnimateFrameTime < FRAME_INTERVAL;
-  if (shouldLimitFrame) {
+  const CurrentLyricsType = Defaults.CurrentLyricsType;
+  const limitFrames = isSpicySidebarMode && !Defaults.SimpleLyricsMode;
+  const interval = limitFrames ? SIDEBAR_FRAME_INTERVAL : DEFAULT_FRAME_INTERVAL;
+  if (now - lastAnimateFrameTime < interval) {
     return;
   }
   const deltaTime = (now - lastFrameTime) / 1000;
   lastFrameTime = now;
   lastAnimateFrameTime = now;
-
-  const CurrentLyricsType = Defaults.CurrentLyricsType;
 
   if (!CurrentLyricsType || CurrentLyricsType === "None") return;
 
@@ -635,12 +631,27 @@ export function Animate(position: number): void {
         for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
           const word = words[wordIndex];
           const wordState = getElementState(ProcessedPosition, word.StartTime, word.EndTime);
-          const percentage = getProgressPercentage(ProcessedPosition, word.StartTime, word.EndTime);
+          const prevWordState = word.Status;
+          if (prevWordState !== wordState) {
+            word.Status = wordState;
+            word.StateChangedAt = now;
+          }
+          const needsInit = !word.AnimatorStore;
+          const shouldAnimateWord =
+            wordState === "Active" ||
+            needsInit ||
+            (word.StateChangedAt !== undefined && now - word.StateChangedAt < WORD_SETTLE_MS);
 
           const isLetterGroup = word?.LetterGroup;
           const isDot = word?.Dot;
 
-          if (!isDot) {
+          if (shouldAnimateWord) {
+            const percentage =
+              wordState === "Active"
+                ? getProgressPercentage(ProcessedPosition, word.StartTime, word.EndTime)
+                : 0;
+
+            if (!isDot) {
             if (!word.AnimatorStore) {
               word.AnimatorStore = createWordSprings();
               word.AnimatorStore.Scale.SetGoal(ScaleSpline.at(0), true);
@@ -785,7 +796,7 @@ export function Animate(position: number): void {
                 `${Math.min(currentGlow * 35, 100)}%`
               );
             }
-          } else if (isDot && !isLetterGroup) {
+            } else if (isDot && !isLetterGroup) {
             // DotGroup
             // (still undone)
             /* {
@@ -878,10 +889,35 @@ export function Animate(position: number): void {
               `${4 + 6 * currentGlow}px`
             ); // Match inspiration
             word.HTMLElement.style.setProperty("--text-shadow-opacity", `${currentGlow * 90}%`); // Match inspiration
+            }
           }
 
-          if (isLetterGroup && word.Letters) {
+          if (isLetterGroup && word.Letters && shouldAnimateWord) {
             if (wordState === "Active") {
+              let activeLetterIndex = -1;
+              let activeLetterPercentage = 0;
+              for (let i = 0; i < word.Letters.length; i++) {
+                if (
+                  getElementState(
+                    ProcessedPosition,
+                    word.Letters[i].StartTime,
+                    word.Letters[i].EndTime
+                  ) === "Active"
+                ) {
+                  activeLetterIndex = i;
+                  activeLetterPercentage = getProgressPercentage(
+                    ProcessedPosition,
+                    word.Letters[i].StartTime,
+                    word.Letters[i].EndTime
+                  );
+                  break;
+                }
+              }
+
+              const wordPercentage = Defaults.SimpleLyricsMode
+                ? getProgressPercentage(ProcessedPosition, word.StartTime, word.EndTime)
+                : 0;
+
               for (let k = 0; k < word.Letters.length; k++) {
                 const letter = word.Letters[k];
 
@@ -896,29 +932,6 @@ export function Animate(position: number): void {
                   targetYOffset: number,
                   targetGlow: number,
                   targetGradient: number;
-
-                // Find active letter info (needed only for Active state calculation)
-                let activeLetterIndex = -1;
-                let activeLetterPercentage = 0;
-                if (wordState === "Active" && word.Letters) {
-                  for (let i = 0; i < word.Letters.length; i++) {
-                    if (
-                      getElementState(
-                        ProcessedPosition,
-                        word.Letters[i].StartTime,
-                        word.Letters[i].EndTime
-                      ) === "Active"
-                    ) {
-                      activeLetterIndex = i;
-                      activeLetterPercentage = getProgressPercentage(
-                        ProcessedPosition,
-                        word.Letters[i].StartTime,
-                        word.Letters[i].EndTime
-                      );
-                      break;
-                    }
-                  }
-                }
 
                 // Determine initial targets based on word state
                 // wordState is Active - Default to resting, then apply proximity-based animation
@@ -937,7 +950,7 @@ export function Animate(position: number): void {
                 if (activeLetterIndex !== -1) {
                   // Get the base animation values for the active letter
                   const percentageCount = Defaults.SimpleLyricsMode
-                    ? getProgressPercentage(ProcessedPosition, word.StartTime, word.EndTime)
+                    ? wordPercentage
                     : activeLetterPercentage;
 
                   const config = SimpleLyricsMode_LetterEffectsStrengthConfig;
